@@ -26,6 +26,7 @@ import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -61,29 +62,65 @@ class ChangeTextBehaviorKtTest {
      * [androidx.test.rule.ActivityTestRule].
      */
     @get:Rule var activityScenarioRule = activityScenarioRule<MainActivity>()
-    val STRING_TO_BE_TYPED = "I like mobile testing"
+
+    private val favoriteFood = "Pizza"
+    private val firstMovie = "Harry Potter and the Sorcerer's Stone"
+    private val secondMovie = "The Lord of the Rings: The Fellowship of the Ring"
 
     @Test
-    fun changeText_sameActivity() {
+    fun verifyTextChangeOnSameScreen() {
+        userInputView.typeText(favoriteFood)
+        onView(userInputView).perform(closeSoftKeyboard())
 
-        // Type text and then press the button.
-        onView(withId(R.id.editTextUserInput))
-                .perform(typeText(STRING_TO_BE_TYPED), closeSoftKeyboard())
-        onView(withId(R.id.changeTextBt)).perform(click())
+        confirmChangeBtn.tap()
 
-
-        // Check that the text was changed.
-        onView(withId(R.id.textToBeChanged)).check(matches(withText(STRING_TO_BE_TYPED)))
+        onView(headerLabel)
+            .check(matches(isDisplayed()))
+            .check(matches(withText(favoriteFood)))
     }
 
     @Test
-    fun changeText_newActivity() {
-        // Type text and then press the button.
-        onView(withId(R.id.editTextUserInput)).perform(typeText(STRING_TO_BE_TYPED),
-                closeSoftKeyboard())
-        onView(withId(R.id.activityChangeTextBtn)).perform(click())
+    fun verifyTextChangeAcrossActivities() {
+        userInputView.typeText(firstMovie)
+        onView(userInputView).perform(closeSoftKeyboard())
 
-        // This view is in a different Activity, no need to tell Espresso.
-        onView(withId(R.id.show_text_view)).check(matches(withText(STRING_TO_BE_TYPED)))
+        confirmChangeBtn.tap()
+
+        onView(headerLabel)
+            .check(matches(isDisplayed()))
+            .check(matches(withText(firstMovie)))
+
+        onView(userInputView).perform(clearText())
+
+        userInputView.typeText(secondMovie)
+        onView(userInputView).perform(closeSoftKeyboard())
+
+        navigateActivityBtn.tap()
+
+        onView(resultLabel)
+            .check(matches(isDisplayed()))
+            .check(matches(withText(secondMovie)))
+    }
+
+    companion object {
+        private val userInputView: Matcher<View> by lazy {
+            withId(R.id.editTextUserInput)
+        }
+
+        private val confirmChangeBtn: Matcher<View> by lazy {
+            withId(R.id.changeTextBt)
+        }
+
+        private val headerLabel: Matcher<View> by lazy {
+            withId(R.id.textToBeChanged)
+        }
+
+        private val navigateActivityBtn: Matcher<View> by lazy {
+            withId(R.id.activityChangeTextBtn)
+        }
+
+        private val resultLabel: Matcher<View> by lazy {
+            withId(R.id.show_text_view)
+        }
     }
 }
